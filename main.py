@@ -34,6 +34,8 @@ from pathlib import Path
 # Spread scaled from in-case holdout errors. Square-root in the horizon: the
 # first draft used a steeper exponent and the synthetic tails were too wide.
 SIGMA_SCALE = 1.0
+# Minimum logit spread, in units of sqrt(days), so a short holdout cannot collapse the tails.
+SIGMA_FLOOR_DAYS = 0.10
 PACE_GRID = (0.6, 0.8, 1.0, 1.2, 1.45, 1.8, 2.2, 2.8, 3.6)
 S_GRID = (0.6, 0.85, 1.0, 1.25, 1.6)
 S_FINE = (0.45, 0.6, 0.75, 0.9, 1.0, 1.15, 1.35, 1.6, 2.0)
@@ -708,7 +710,7 @@ def calibrate_sigma(errors: list[tuple[float, float]], horizon_hours: float) -> 
     if not math.isfinite(scaled):
         return prior
     blended = 0.72 * scaled + 0.28 * prior
-    floor = 0.10 * math.sqrt(max(horizon_hours, 0.5) / 24.0)
+    floor = SIGMA_FLOOR_DAYS * math.sqrt(max(horizon_hours, 0.5) / 24.0)
     return min(1.05, max(floor, blended))
 
 
